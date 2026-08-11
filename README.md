@@ -30,10 +30,10 @@ An intelligent automation script designed to automatically sort, verify, and cor
 
     Ensure your database path and board configurations match your local setup.
 
-    Run the script in Dry-Run mode first to preview changes:
+    Run the script in Dry-Run mode first to preview changes (Dry-Run mode is the default without command arguments):
     Bash
 
-    python invokeai_auto_sorter.py --dry-run
+    python invokeai_auto_sorter.py
 
     Run the live sorting process:
     Bash
@@ -69,10 +69,10 @@ Ein intelligentes Automatisierungsskript zur automatischen Sortierung, Validieru
 
     Passe die Datenbankpfade und Konfigurationen an deine lokale Umgebung an.
 
-    Führe das Skript zunächst im Dry-Run-Modus aus, um die Vorschau zu prüfen:
+    Führe das Skript zunächst im Dry-Run-Modus aus, um die Vorschau zu prüfen (Dry-Run-Modus ist die Standardeinstellung ohne Parameter):
     Bash
 
-    python invokeai_auto_sorter.py --dry-run
+    python invokeai_auto_sorter.py
 
     Starte den echten Sortierlauf:
     Bash
