@@ -19,13 +19,13 @@ from collections import Counter
 if platform.system() == "Windows":
     DEFAULT_DB_PATH = Path(r"")  # Passe diesen Windows-Pfad bei Bedarf an deine Ordnerstruktur an
 else:
-    DEFAULT_DB_PATH = Path("")
+    DEFAULT_DB_PATH = Path("") # Passe diesen Linux-Pfad bei Bedarf an deine Ordnerstruktur an
     
-# --- BOARD-REGELN --- NACH BELIEBEN ANPASSEN!!!
+# --- BOARD-REGELN ---
 RULES = {
-    "Portrait": ["medium shot portrait", "bokeh", "photorealistic"],
+    "Portrait": ["medium shot portrait", "bokeh", "festival stage"],
     "Photorealism": ["realism_lora", "cinematic_photo", "raw_photo"],
-    "food": ["Fruit Pancakes"],
+    "food": ["Fruit Pancakes", "sweet", "red strawberry sauce", "baked", "delicious", "steaming", "dish", "served", "maple sirup", "breakfast"],
 }
 # --- BOARD-REGELN ---
 QUALITY_STOPWORDS = {
@@ -86,7 +86,7 @@ def clean_board_name_from_tag(raw_name: str) -> str:
     # 3. Versionsnummern am Ende entfernen (_v2, -v2 etc.)
     cleaned = re.sub(r'[\s_\-]*v\d+([._]\d+)?$', '', cleaned, flags=re.IGNORECASE)
     
-    # 4. JETZT ALLE PUNKTE WEG (wandelt "Vorname.Nachname" in "VornameNachname")
+    # 4. JETZT ALLE PUNKTE WEG (wandelt "first.second" in "firstsecond")
     cleaned = cleaned.replace('.', '')
     
     # 5. Unterstriche und Bindestriche zu Leerzeichen
@@ -161,7 +161,7 @@ def determine_board(metadata_raw, existing_boards_lower):
     # -------------------------------------------------------------
     return None, None
 
-def get_or_create_board(cursor, board_name, existing_boards, existing_boards_lower, dry_run, allow_creation=False):
+def get_or_create_board(cursor, board_name, existing_boards, existing_boards_lower, dry_run, allow_creation):
     normalized = board_name.lower()
     if normalized in existing_boards_lower:
         return existing_boards_lower[normalized]
@@ -181,9 +181,8 @@ def get_or_create_board(cursor, board_name, existing_boards, existing_boards_low
             return f"DRY_RUN_{board_name}"
             
     return None
-from collections import Counter
 
-def auto_sort_boards(db_path: Path, dry_run: bool = False):
+def auto_sort_boards(db_path: Path, dry_run=True, allow_creation=False):
     """Hauptfunktion: Liest DB, berechnet Ziel-Boards und aktualisiert board_images."""
     print(f"📂 Verwende Datenbank: {db_path}")
     if not db_path.exists():
@@ -228,7 +227,7 @@ def auto_sort_boards(db_path: Path, dry_run: bool = False):
         target_board_name, reason = determine_board(metadata_raw, existing_boards_lower)
         """
         # --- ERWEITERTER DEBUG-BLOCK FÜR LORA-SUCHE ---
-        if "351eeb49" in img_name:  
+        if "examplehash" in img_name:  
             print(f"\n🔍 [DEBUG LORA-SUCHE] Bild: {img_name}")
             print(f"   - Aktuelles Board: {id_to_board_name.get(current_board_id, 'Kein Board')}")
             
@@ -237,7 +236,7 @@ def auto_sort_boards(db_path: Path, dry_run: bool = False):
                 all_found_strings = extract_all_strings_from_json(meta_dict)
                 
                 # Wir filtern gezielt nach LoRA-Endungen in allen gefundenen Strings:
-                lora_candidates = [s for s in all_found_strings if any(ext in s.lower() for ext in ['.safetensors', '.ckpt', '.pt', 'lora', 'ichbinanny'])]
+                lora_candidates = [s for s in all_found_strings if any(ext in s.lower() for ext in ['.safetensors', '.ckpt', '.pt', 'lora'])]
                 print(f"   - Gefundene LoRA-Verdächtige in Metadaten: {lora_candidates}")
                 
             except Exception as e:
@@ -327,10 +326,26 @@ def main():
         action="store_true",
         help="Führt die Änderungen tatsächlich in der DB aus (ohne diesen Flag läuft nur ein Dry-Run).",
     )
+    
+    parser.add_argument(
+        "--allow-creation",
+        dest="allow_creation",
+        action="store_true",
+        help="Erlaubt dem Skript, automatisch neue Boards in der Datenbank anzulegen.",
+    )
+    parser.add_argument(
+        "--no-creation",
+        dest="allow_creation",
+        action="store_false",
+        help="Verbietet das automatische Erstellen neuer Boards.",
+    )
+    parser.set_defaults(allow_creation=False)  # Standardmäßig auf True oder False setzen (je nach Wunsch)
 
     args = parser.parse_args()
     dry_run = not args.apply
-    auto_sort_boards(args.db, dry_run=dry_run)
+    
+    # Übergebe allow_creation an deine Hauptfunktion (achte darauf, dass auto_sort_boards den Parameter auch annimmt)
+    auto_sort_boards(args.db, dry_run=dry_run, allow_creation=args.allow_creation)
 
 if __name__ == "__main__":
     main()
